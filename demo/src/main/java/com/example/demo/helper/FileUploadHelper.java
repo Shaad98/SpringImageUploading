@@ -1,6 +1,7 @@
 package com.example.demo.helper;
 
 import java.io.File;
+import java.io.IOException;
 // import java.io.FileOutputStream;
 // import java.io.IOException;
 // import java.io.InputStream;
@@ -10,12 +11,20 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 @Component
 public class FileUploadHelper {
-    private String UPLOAD_DIR = "D:\\FINAL_YEAR\\DEVELOPMENT\\BOOT\\ImageUploading\\SpringImageUploading\\demo\\src\\main\\resources\\static\\images";
+    private String UPLOAD_DIR = new ClassPathResource("static/images/").getFile().getAbsolutePath();
+
+    
+
+    public FileUploadHelper() throws IOException{
+    }
+
+
 
     public boolean upload(MultipartFile multipartFile)
     {
