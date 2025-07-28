@@ -4,6 +4,7 @@ package com.example.demo.controller;
 import java.io.IOException;
 // import java.net.http.HttpHeaders;
 
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 // import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
@@ -16,8 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 // import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.example.demo.entity.FileEntity;
-// import com.example.demo.helper.FileUploadHelper;
-import com.example.demo.repository.FileRepository;
+import com.example.demo.repository.jpa.JpaFileEntityRepository;
+import com.example.demo.repository.mongo.MongoFileEntityRepository;
 
 // import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,8 +30,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class MainController {
 
     @Autowired
-    private FileRepository fileRepository;
+    private JpaFileEntityRepository fileRepository;
 
+    // Max 16 MB can be stored
+    @Autowired
+    private MongoFileEntityRepository fileMongoRepository;
 
     // @Autowired
     // private FileUploadHelper fileUploadHelper;
@@ -73,6 +77,27 @@ public class MainController {
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"") 
                     .body(file.getData())   ;
     }
+
+    @PostMapping("/uploadMongoBasic")
+    public ResponseEntity<String> uploadFileMongoBasic(@RequestParam("file") MultipartFile file) throws IOException {
+       FileEntity fileEntity = new FileEntity();
+       fileEntity.setName(file.getOriginalFilename());
+       fileEntity.setContentType(file.getContentType());
+       fileEntity.setData(file.getBytes());
+
+       fileMongoRepository.save(fileEntity);
+
+       return ResponseEntity.ok("File uploaded successfully! "+fileEntity.getObjectId());
+    }
     
+    @GetMapping("/download/mongoBasic/{id}")
+    public ResponseEntity<byte[]> downloadMongoBasic(@PathVariable ObjectId id) {
+        FileEntity file = fileMongoRepository.findById(id).orElseThrow(()->new RuntimeException("File not found!"));
+        return ResponseEntity
+                    .ok()
+                    .contentType(MediaType.parseMediaType(file.getContentType()))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"") 
+                    .body(file.getData())   ;
+    }
     
 }
